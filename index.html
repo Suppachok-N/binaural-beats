@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binaural Beats & Pink Noise Generator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .container {
+            position: relative;
+            background: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            width: 320px;
+            border: 1px solid #2c2c2c;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        h2 { margin: 0; text-align: center; color: #fff; }
+        
+        .help-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid #888;
+            background: transparent;
+            color: #888;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+        .help-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            width: 320px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            color: #e0e0e0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .modal-body {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #ccc;
+        }
+        .modal-body ul {
+            padding-left: 18px;
+            margin: 8px 0;
+        }
+        .modal-body li {
+            margin-bottom: 6px;
+        }
+
+        .policy-toggle-btn {
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: 1px solid #3f3f3f;
+            border-radius: 4px;
+            color: #4caf50;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .policy-toggle-btn:hover {
+            background: #333;
+        }
+        .policy-content {
+            display: none;
+            margin-top: 8px;
+            padding: 10px;
+            background: #181818;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .policy-section-title {
+            font-weight: bold;
+            color: #fff;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .close-btn {
+            margin-top: 16px;
+            width: 100%;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #3f3f3f;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .close-btn:hover {
+            background: #383838;
+        }
+
+        .section {
+            border-bottom: 1px solid #333;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+        .group { margin: 8px 0; }
+        
+        .freq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        label { font-size: 14px; font-weight: bold; color: #b0b0b0; }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #fff;
+        }
+        input[type="checkbox"], input[type="range"] { accent-color: #4caf50; cursor: pointer; }
+        input[type="range"] { width: 100%; margin-top: 4px; }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .preset-btn {
+            padding: 6px 0;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #2a2a2a;
+            border: 1px solid #3f3f3f;
+            border-radius: 4px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .preset-btn:hover {
+            background-color: #383838;
+            border-color: #4caf50;
+        }
+
+        .btn-group { margin-top: 16px; }
+        .main-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .play { background: #2e7d32; }
+        .play:hover { background: #388e3c; }
+        .stop { background: #c62828; }
+        .stop:hover { background: #d32f2f; }
+        .vol-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .db-display {
+            font-size: 12px;
+            color: #4caf50;
+            font-weight: normal;
+        }
+        .db-display.warning {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="help-btn" onclick="toggleModal(true)" aria-label="คู่มือการใช้งาน">?</button>
+
+    <div class="header-container">
+        <h2>Binaural Beats</h2>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <input type="checkbox" id="chkFreq" checked onchange="toggleFreq()">
+            <div class="section-title">Sound frequency</div>
+        </div>
+
+        <div class="group">
+            <label>Preset</label>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="setPreset(100, 102.5)">Delta</button>
+                <button class="preset-btn" onclick="setPreset(136.1, 142.1)">Theta</button>
+                <button class="preset-btn" onclick="setPreset(200, 210)">Alpha</button>
+                <button class="preset-btn" onclick="setPreset(250, 270)">Beta</button>
+                <button class="preset-btn" onclick="setPreset(400, 440)">Gamma</button>
+            </div>
+        </div>
+
+        <div class="group freq-grid">
+            <label>Left (Hz)<input type="number" id="inLeft" value="100" min="1" max="20000" step="any" oninput="updateAudio()"></label>
+            <label>Right (Hz)<input type="number" id="inRight" value="102.5" min="1" max="20000" step="any" oninput="updateAudio()"></label>
+        </div>
+
+        <div class="group">
+            <label class="vol-label">
+                <span>Loudness</span>
+                <span id="dispFreqDb" class="db-display">-20.0 dBFS</span>
+            </label>
+            <input type="range" id="volFreq" min="0.0001" max="1" step="0.0001" value="0.1" oninput="updateAudio()">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <input type="checkbox" id="chkPink" onchange="togglePink()">
+            <div class="section-title">Pink noise</div>
+        </div>
+        <div class="group">
+            <label class="vol-label">
+                <span>Loudness</span>
+                <span id="dispPinkDb" class="db-display">-14.0 dBFS</span>
+            </label>
+            <input type="range" id="volPink" min="0.0001" max="1" step="0.0001" value="0.2" oninput="updateAudio()">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button id="btnPlay" class="main-btn play" onclick="togglePlay()">Play</button>
+    </div>
+</div>
+
+<div id="helpModal" class="modal" onclick="closeModalOutside(event)">
+    <div class="modal-content">
+        <div class="modal-title">Instructions</div>
+        <div class="modal-body">
+            <ul>
+                <li><b>Headphones:</b> Stereo headphones must be used. Listening through external speakers will not produce Binaural Beats effects.</li>
+                <li><b>Sound frequency:</b> Adjust left/right headphone frequencies manually or choose a preset based on your objective:
+                    <ul>
+                        <li><b>Delta:</b> Relaxation, deep sleep, stress reduction.</li>
+                        <li><b>Theta:</b> Meditation, boosting creativity.</li>
+                        <li><b>Alpha:</b> Mental relaxation, reducing anxiety, promoting calm.</li>
+                        <li><b>Beta:</b> Enhancing alertness, improving focus and concentration while studying or working.</li>
+                        <li><b>Gamma:</b> Improving learning efficiency, stimulating higher cognitive functions.</li>
+                    </ul>
+                </li>
+                <li><b>Pink noise:</b> Helps mask external background noise.</li>
+                <li><b>Loudness:</b> It is recommended to keep volume below -12 dBFS (typically -18 dBFS to -24 dBFS). If listening alongside other audio, reduce it further by -10 dB to -15 dB.</li>
+            </ul>
+
+            <button class="policy-toggle-btn" onclick="togglePolicy()">
+                <span>Terms & Policies</span>
+                <span id="arrPolicy">▼</span>
+            </button>
+
+            <div id="secPolicy" class="policy-content">
+                <div class="policy-section-title">1. Medical Disclaimer</div>
+                <ul>
+                    <li>This application is not a medical device and is not a substitute for diagnosis, treatment, or therapy for neurological or psychiatric conditions.</li>
+                    <li><b>Who should avoid:</b> Individuals with epilepsy, heart conditions, or cardiac pacemakers should avoid use or consult a physician beforehand.</li>
+                    <li><b>Precautions:</b> Do not use while driving, operating machinery, or engaging in activities requiring high alertness.</li>
+                </ul>
+
+                <div class="policy-section-title">2. Terms of Service</div>
+                <ul>
+                    <li>The developer assumes no responsibility for damages, side effects (such as headaches or dizziness), or hearing damage caused by excessive volume or improper usage.</li>
+                    <li>Intellectual property rights for the source code and user interface are reserved.</li>
+                </ul>
+
+                <div class="policy-section-title">3. Privacy Policy & PDPA</div>
+                <ul>
+                    <li><b>Data Collection:</b> This application runs entirely client-side on your device. No personal data is stored or transmitted to external servers.</li>
+                    <li><b>Cookies:</b> No tracking systems, cookies, or intrusive advertisements are used.</li>
+                </ul>
+            </div>
+        </div>
+        <button class="close-btn" onclick="toggleModal(false)">Close</button>
+    </div>
+</div>
+
+<script>
+    let ctx, gMaster;
+    let oscL, oscR, gFreq;
+    let pNode, gPink;
+
+    const FADE_DUR = 0.1;
+    const MIN_GAIN = 0.0001;
+
+    const inLeft = document.getElementById('inLeft');
+    const inRight = document.getElementById('inRight');
+    const volFreq = document.getElementById('volFreq');
+    const volPink = document.getElementById('volPink');
+    const chkFreq = document.getElementById('chkFreq');
+    const chkPink = document.getElementById('chkPink');
+    const btnPlay = document.getElementById('btnPlay');
+
+    function toggleModal(show) {
+        document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function closeModalOutside(e) {
+        if (e.target.id === 'helpModal') toggleModal(false);
+    }
+
+    function togglePolicy() {
+        const el = document.getElementById('secPolicy');
+        const arr = document.getElementById('arrPolicy');
+        const isOpen = el.style.display === 'block';
+        el.style.display = isOpen ? 'none' : 'block';
+        arr.textContent = isOpen ? '▼' : '▲';
+    }
+
+    function toDbFS(g) {
+        return g <= MIN_GAIN ? "-∞ dBFS" : `${(20 * Math.log10(g)).toFixed(1)} dBFS`;
+    }
+
+    function fromDbFS(db) {
+        return Math.pow(10, db / 20);
+    }
+
+    function updateDbDisp(id, g) {
+        const el = document.getElementById(id);
+        el.textContent = toDbFS(g);
+        el.classList.toggle('warning', 20 * Math.log10(g) > -12);
+    }
+
+    function setPreset(lHz, rHz) {
+        inLeft.value = lHz;
+        inRight.value = rHz;
+        updateAudio();
+    }
+
+    function fadeGain(gNode, target, dur = FADE_DUR) {
+        if (!gNode || !ctx) return;
+        const now = ctx.currentTime;
+        gNode.gain.setValueAtTime(Math.max(MIN_GAIN, gNode.gain.value), now);
+        gNode.gain.exponentialRampToValueAtTime(Math.max(MIN_GAIN, target), now + dur);
+    }
+
+    function stopNodes(gNode, ...nodes) {
+        if (!gNode || !ctx) return;
+        fadeGain(gNode, MIN_GAIN);
+        setTimeout(() => {
+            nodes.forEach(n => {
+                if (n) {
+                    if (n.stop) n.stop();
+                    n.disconnect();
+                }
+            });
+            gNode.disconnect();
+        }, FADE_DUR * 1000 + 50);
+    }
+
+    function togglePlay() {
+        ctx ? stopCtx() : startCtx();
+    }
+
+    function startCtx() {
+        ctx = new AudioContext();
+        gMaster = new GainNode(ctx, { gain: MIN_GAIN });
+        gMaster.connect(ctx.destination);
+
+        toggleFreq();
+        togglePink();
+
+        fadeGain(gMaster, 1);
+        setBtnState('Stop', 'main-btn stop');
+    }
+
+    function toggleFreq() {
+        if (!ctx) return;
+        if (!chkFreq.checked) return stopFreq();
+        if (oscL || oscR) return;
+
+        oscL = new OscillatorNode(ctx);
+        oscR = new OscillatorNode(ctx);
+        gFreq = new GainNode(ctx, { gain: MIN_GAIN });
+
+        oscL.connect(new StereoPannerNode(ctx, { pan: -1 })).connect(gFreq);
+        oscR.connect(new StereoPannerNode(ctx, { pan: 1 })).connect(gFreq);
+        gFreq.connect(gMaster);
+
+        updateAudio();
+        fadeGain(gFreq, parseFloat(volFreq.value));
+
+        const now = ctx.currentTime;
+        oscL.start(now);
+        oscR.start(now);
+    }
+
+    function togglePink() {
+        if (!ctx) return;
+        if (!chkPink.checked) return stopPink();
+        if (pNode) return;
+
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        pNode = ctx.createScriptProcessor(4096, 1, 1);
+        gPink = new GainNode(ctx, { gain: MIN_GAIN });
+
+        pNode.onaudioprocess = e => {
+            const out = e.outputBuffer.getChannelData(0);
+            for (let i = 0; i < 4096; i++) {
+                const w = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + w * 0.0555179;
+                b1 = 0.99332 * b1 + w * 0.0750759;
+                b2 = 0.96900 * b2 + w * 0.1538520;
+                b3 = 0.86650 * b3 + w * 0.3104856;
+                b4 = 0.55000 * b4 + w * 0.5329522;
+                b5 = -0.7616 * b5 - w * 0.0168980;
+                out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+                b6 = w * 0.115926;
+            }
+        };
+
+        updateAudio();
+        pNode.connect(gPink).connect(gMaster);
+        fadeGain(gPink, parseFloat(volPink.value));
+    }
+
+    function updateAudio() {
+        const vFreq = parseFloat(volFreq.value);
+        const vPink = parseFloat(volPink.value);
+
+        updateDbDisp('dispFreqDb', vFreq);
+        updateDbDisp('dispPinkDb', vPink);
+
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (oscL) oscL.frequency.setValueAtTime(parseFloat(inLeft.value) || 0, now);
+        if (oscR) oscR.frequency.setValueAtTime(parseFloat(inRight.value) || 0, now);
+
+        if (gFreq) gFreq.gain.setTargetAtTime(Math.max(MIN_GAIN, vFreq), now, 0.02);
+        if (gPink) gPink.gain.setTargetAtTime(Math.max(MIN_GAIN, vPink), now, 0.02);
+    }
+
+    function stopFreq() {
+        const g = gFreq, l = oscL, r = oscR;
+        gFreq = oscL = oscR = null;
+        stopNodes(g, l, r);
+    }
+
+    function stopPink() {
+        const g = gPink, n = pNode;
+        gPink = pNode = null;
+        stopNodes(g, n);
+    }
+
+    function stopCtx() {
+        if (!ctx) return;
+        fadeGain(gMaster, MIN_GAIN);
+
+        setTimeout(() => {
+            stopFreq();
+            stopPink();
+            if (ctx) {
+                ctx.close();
+                ctx = null;
+            }
+            setBtnState('Play', 'main-btn play');
+        }, FADE_DUR * 1000 + 100);
+    }
+
+    function setBtnState(text, cls) {
+        btnPlay.textContent = text;
+        btnPlay.className = cls;
+    }
+
+    volFreq.value = fromDbFS(-20);
+    updateAudio();
+</script>
+
+</body>
+</html>
